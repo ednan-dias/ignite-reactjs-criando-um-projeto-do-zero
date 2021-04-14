@@ -3,7 +3,7 @@ import Prismic from '@prismicio/client';
 import { useRouter } from 'next/router';
 import { format } from 'date-fns';
 import ptBR from 'date-fns/locale/pt-BR';
-
+// import PrismicDOM from 'prismic-dom';
 import Header from '../../components/Header';
 import { getPrismicClient } from '../../services/prismic';
 
@@ -33,10 +33,13 @@ interface PostProps {
 
 export default function Post({ post }: PostProps): JSX.Element {
   const router = useRouter();
-  console.log(JSON.stringify(post, null, 4));
 
   if (router.isFallback) {
-    return <div>Carregando...</div>;
+    return (
+      <div>
+        <p>Carregando...</p>
+      </div>
+    );
   }
 
   return (
@@ -49,18 +52,33 @@ export default function Post({ post }: PostProps): JSX.Element {
       </div>
 
       <div className={commonStyles.content}>
-        <img src="/calendar.svg" alt="calendar" />
-        <p>
-          {format(new Date(post.first_publication_date), 'dd MMMM yyyy', {
-            locale: ptBR,
-          })}
-        </p>
+        <h1>{post.data.title}</h1>
+        <section className={styles.info}>
+          <article>
+            <img src="/calendar.svg" alt="calendar" />
+            <p>{post.first_publication_date}</p>
+          </article>
 
-        <img src="/user.svg" alt="user" />
-        <p>{post.data.author}</p>
+          <article>
+            <img src="/user.svg" alt="user" />
+            <p>{post.data.author}</p>
+          </article>
 
-        <img src="/clock.svg" alt="clock" />
-        <p>4 min</p>
+          <article>
+            <img src="/clock.svg" alt="clock" />
+            <p>4 min</p>
+          </article>
+        </section>
+
+        {post.data.content.map(conteudo => {
+          const { heading } = conteudo;
+
+          return (
+            <>
+              <h1>{heading}</h1>
+            </>
+          );
+        })}
       </div>
     </div>
   );
@@ -99,15 +117,31 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   const prismic = getPrismicClient();
   const response = await prismic.getByUID('posts', String(slug), {});
 
+  const content = response.data.content.map(conteudo => {
+    const { heading, body } = conteudo;
+    return {
+      heading,
+      body: {
+        text: body.map(corpo => corpo?.text)[0],
+      },
+    };
+  });
+
   const post = {
-    first_publication_date: response.first_publication_date,
+    first_publication_date: format(
+      new Date(response.first_publication_date),
+      'dd MMM yyyy',
+      {
+        locale: ptBR,
+      }
+    ),
     data: {
       title: response.data.title,
       banner: {
         url: response.data.banner.url,
       },
       author: response.data.author,
-      content: response.data.content,
+      content,
     },
   };
 

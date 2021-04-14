@@ -47,11 +47,7 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
     const morePosts = response.results.map(post => {
       return {
         uid: post.uid,
-        first_publication_date: format(
-          new Date(post.first_publication_date),
-          'dd MMMM yyyy',
-          { locale: ptBR }
-        ),
+        first_publication_date: post.first_publication_date,
         data: {
           title: post.data.title,
           subtitle: post.data.subtitle,
@@ -81,13 +77,7 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
               <div className={styles.info}>
                 <time>
                   <img src="calendar.svg" alt="calendar" />
-                  <p>
-                    {format(
-                      new Date(post.first_publication_date),
-                      'dd MMMM yyyy',
-                      { locale: ptBR }
-                    )}
-                  </p>
+                  <p>{post.first_publication_date}</p>
                 </time>
 
                 <div>
@@ -124,7 +114,13 @@ export const getStaticProps: GetStaticProps = async () => {
   const posts = response.results.map(post => {
     return {
       uid: post.uid,
-      first_publication_date: post.first_publication_date,
+      first_publication_date: format(
+        new Date(post.first_publication_date),
+        'dd MMM yyyy',
+        {
+          locale: ptBR,
+        }
+      ),
       data: {
         title: post.data.title,
         subtitle: post.data.subtitle,
