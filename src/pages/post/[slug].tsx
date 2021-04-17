@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { format } from 'date-fns';
 import ptBR from 'date-fns/locale/pt-BR';
 // import PrismicDOM from 'prismic-dom';
+import { RichText } from 'prismic-dom';
 import Header from '../../components/Header';
 import { getPrismicClient } from '../../services/prismic';
 
@@ -42,6 +43,17 @@ export default function Post({ post }: PostProps): JSX.Element {
     );
   }
 
+  //  split(/\s/g);
+
+  const readingTime = post.data.content.reduce((acc, obj) => {
+    const bodyText = RichText.asText(obj.body);
+    const textLength = bodyText.split(/\s/g).length;
+
+    const time = Math.ceil(textLength / 200);
+
+    return acc + time;
+  }, 0);
+
   return (
     <div className={commonStyles.container}>
       <div className={commonStyles.content}>
@@ -56,7 +68,11 @@ export default function Post({ post }: PostProps): JSX.Element {
         <section className={styles.info}>
           <article>
             <img src="/calendar.svg" alt="calendar" />
-            <p>{post.first_publication_date}</p>
+            <p>
+              {format(new Date(post.first_publication_date), 'dd MMM yyyy', {
+                locale: ptBR,
+              })}
+            </p>
           </article>
 
           <article>
@@ -66,19 +82,18 @@ export default function Post({ post }: PostProps): JSX.Element {
 
           <article>
             <img src="/clock.svg" alt="clock" />
-            <p>4 min</p>
+            <p>{readingTime} min</p>
           </article>
         </section>
 
-        {post.data.content.map(conteudo => {
-          const { heading } = conteudo;
-
-          return (
-            <>
+        <main>
+          {post.data.content.map(({ heading, body }) => (
+            <div>
               <h1>{heading}</h1>
-            </>
-          );
-        })}
+              <div>{body.map(corpo => corpo.text)}</div>
+            </div>
+          ))}
+        </main>
       </div>
     </div>
   );
@@ -96,18 +111,14 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
   const uids = posts.results.map(post => {
     return {
-      slug: post.uid,
+      params: {
+        slug: post.uid,
+      },
     };
   });
 
   return {
-    paths: [
-      {
-        params: {
-          slug: `${uids}`,
-        },
-      },
-    ],
+    paths: uids,
     fallback: true,
   };
 };
@@ -117,24 +128,15 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   const prismic = getPrismicClient();
   const response = await prismic.getByUID('posts', String(slug), {});
 
-  const content = response.data.content.map(conteudo => {
-    const { heading, body } = conteudo;
+  const content = response.data.content.map(({ heading, body }) => {
     return {
       heading,
-      body: {
-        text: body.map(corpo => corpo?.text)[0],
-      },
+      body,
     };
   });
 
   const post = {
-    first_publication_date: format(
-      new Date(response.first_publication_date),
-      'dd MMM yyyy',
-      {
-        locale: ptBR,
-      }
-    ),
+    first_publication_date: response.first_publication_date,
     data: {
       title: response.data.title,
       banner: {
@@ -149,6 +151,5 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     props: {
       post,
     },
-    revalidate: 60 * 30,
   };
 };
