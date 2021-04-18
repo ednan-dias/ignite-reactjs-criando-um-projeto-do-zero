@@ -34,3 +34,16 @@
     }
   }
 }
+
+.content {
+  width: 100%;
+  overflow: auto;
+
+  h1 {
+    margin: 10px;
+  }
+
+  div {
+    margin: 10px;
+  }
+}

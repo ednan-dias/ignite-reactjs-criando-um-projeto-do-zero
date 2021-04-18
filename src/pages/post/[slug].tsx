@@ -3,7 +3,6 @@ import Prismic from '@prismicio/client';
 import { useRouter } from 'next/router';
 import { format } from 'date-fns';
 import ptBR from 'date-fns/locale/pt-BR';
-// import PrismicDOM from 'prismic-dom';
 import { RichText } from 'prismic-dom';
 import Header from '../../components/Header';
 import { getPrismicClient } from '../../services/prismic';
@@ -12,6 +11,7 @@ import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
 
 interface Post {
+  uid?: string;
   first_publication_date: string | null;
   data: {
     title: string;
@@ -42,9 +42,6 @@ export default function Post({ post }: PostProps): JSX.Element {
       </div>
     );
   }
-
-  //  split(/\s/g);
-
   const readingTime = post.data.content.reduce((acc, obj) => {
     const bodyText = RichText.asText(obj.body);
     const textLength = bodyText.split(/\s/g).length;
@@ -87,10 +84,16 @@ export default function Post({ post }: PostProps): JSX.Element {
         </section>
 
         <main>
-          {post.data.content.map(({ heading, body }) => (
-            <div>
+          {post.data.content.map(({ heading, body }, index) => (
+            // eslint-disable-next-line react/no-array-index-key
+            <div key={index} className={styles.content}>
               <h1>{heading}</h1>
-              <div>{body.map(corpo => corpo.text)}</div>
+              <div
+                // eslint-disable-next-line react/no-danger
+                dangerouslySetInnerHTML={{
+                  __html: `${RichText.asHtml(body)}`,
+                }}
+              />
             </div>
           ))}
         </main>
@@ -136,9 +139,11 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   });
 
   const post = {
+    uid: response.uid,
     first_publication_date: response.first_publication_date,
     data: {
       title: response.data.title,
+      subtitle: response.data.subtitle,
       banner: {
         url: response.data.banner.url,
       },
