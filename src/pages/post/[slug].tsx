@@ -44,6 +44,7 @@ export default function Post({ post }: PostProps): JSX.Element {
   }
   const readingTime = post.data.content.reduce((acc, obj) => {
     const bodyText = RichText.asText(obj.body);
+
     const textLength = bodyText.split(/\s/g).length;
 
     const time = Math.ceil(textLength / 200);
