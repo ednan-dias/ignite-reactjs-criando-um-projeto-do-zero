@@ -27,9 +27,13 @@ interface PostPagination {
 
 interface HomeProps {
   postsPagination: PostPagination;
+  preview: boolean;
 }
 
-export default function Home({ postsPagination }: HomeProps): JSX.Element {
+export default function Home({
+  postsPagination,
+  preview,
+}: HomeProps): JSX.Element {
   const { next_page, results } = postsPagination;
 
   const [posts, setPosts] = useState<Post[]>([]);
@@ -45,16 +49,10 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
       result.json().then(data => data)
     );
 
-    const morePosts = response.results.map(post => {
+    const morePosts = response.results.map((post: Post) => {
       return {
         uid: post.uid,
-        first_publication_date: format(
-          new Date(post.first_publication_date),
-          'dd MMM yyyy',
-          {
-            locale: ptBR,
-          }
-        ),
+        first_publication_date: post.first_publication_date,
         data: {
           title: post.data.title,
           subtitle: post.data.subtitle,
@@ -110,19 +108,31 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
           ) : (
             ''
           )}
+
+          {preview && (
+            <aside className={styles.viewButton}>
+              <Link href="/api/exit-preview">
+                <a>Sair do modo Preview</a>
+              </Link>
+            </aside>
+          )}
         </main>
       </div>
     </div>
   );
 }
 
-export const getStaticProps: GetStaticProps = async () => {
+export const getStaticProps: GetStaticProps = async ({
+  preview = false,
+  previewData,
+}) => {
   const prismic = getPrismicClient();
   const response = await prismic.query(
     [Prismic.Predicates.at('document.type', 'posts')],
     {
       fetch: '*',
       pageSize: 5,
+      ref: previewData?.ref ?? null,
     }
   );
 
@@ -144,6 +154,7 @@ export const getStaticProps: GetStaticProps = async () => {
         next_page: response.next_page,
         results: posts,
       },
+      preview,
     },
   };
 };
