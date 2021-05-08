@@ -99,6 +99,11 @@
     max-height: 40px;
     margin: 0 3px;
 
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    // align-items: flex-end;
+
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
@@ -106,6 +111,8 @@
     &.left {
       display: flex;
       flex-direction: column;
+      justify-content: flex-end;
+      // align-items: flex-end;
     }
 
     p {

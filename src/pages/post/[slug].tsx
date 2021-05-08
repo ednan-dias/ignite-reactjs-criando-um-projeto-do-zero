@@ -132,14 +132,16 @@ export default function Post({
               <span>
                 <p>{prevPost.title}</p>
                 <Link href={`/post/${prevPost.uid}`}>
-                  <a>Post Anterior</a>
+                  <a style={{ textAlign: 'left' }}>Post Anterior</a>
                 </Link>
               </span>
             )}
 
             {nextPost !== null && (
               <span className={styles.left}>
-                <p>{nextPost.title}</p>
+                <p style={{ width: '100%', textAlign: 'right' }}>
+                  {nextPost.title}
+                </p>
                 <Link href={`/post/${nextPost.uid}`}>
                   <a style={{ textAlign: 'right' }}>Próximo Post</a>
                 </Link>
